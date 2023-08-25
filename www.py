@@ -1,3 +1,5 @@
+import random
+
 EMPTY = 0
 WROOK, WKNIGHT, WBISHOP, WQUEEN, WKING, WPAWN =    1, 2, 3, 4, 5, 6
 BROOK, BKNIGHT, BBISHOP, BQUEEN, BKING, BPAWN =    9,10,11,12,13,14
@@ -73,7 +75,7 @@ class Position:
                                 break
 
                 if x == BISHOP or x == QUEEN:
-                    for k in range(len(board[i])):
+                    for k in range(1, len(board[i])):
                         if 0 <= i + k <= len(board) - 1 and 0 <= j + k <= len(board[i]) - 1:
                             if board[i+k][j+k] != EMPTY and board[i+k][j+k] & 8 == color:
                                 break
@@ -81,7 +83,7 @@ class Position:
                             if board[i+k][j+k] != EMPTY:
                                 break
 
-                    for k in range(len(board[i])):
+                    for k in range(1, len(board[i])):
                         if 0 <= i - k <= len(board) - 1 and 0 <= j - k <= len(board[i]) - 1:
                             if board[i-k][j-k] != EMPTY and board[i-k][j-k] & 8 == color:
                                 break
@@ -89,7 +91,7 @@ class Position:
                             if board[i-k][j-k] != EMPTY:
                                 break
 
-                    for k in range(len(board[i])):
+                    for k in range(1, len(board[i])):
                         if 0 <= i + k <= len(board) - 1 and 0 <= j - k <= len(board[i]) - 1:
                             if board[i+k][j-k] != EMPTY and board[i+k][j-k] & 8 == color:
                                 break
@@ -97,7 +99,7 @@ class Position:
                             if board[i+k][j-k] != EMPTY:
                                 break
 
-                    for k in range(len(board[i])):
+                    for k in range(1, len(board[i])):
                         if 0 <= i - k <= len(board) - 1 and 0 <= j + k <= len(board[i]) - 1:
                             if board[i-k][j+k] != EMPTY and board[i-k][j+k] & 8 == color:
                                 break
@@ -156,26 +158,78 @@ class Position:
         for i in board:
             for j in i:
                 cnt += (j & 8 != color) * 2 - 1 if j != EMPTY else 0
-        return cnt
+        return cnt + 0.01 * len(self.get_all_moves())
 
-    def make_move(self):
-        board = self.board
+    def make_move(self, move):
+        board = []
+        for i in self.board:
+            board.append(i[:])
         color = self.color
-        # TODO
+        x1, y1, x2, y2 = move
+        board[x2][y2] = board[x1][y1]
+        board[x1][y1] = EMPTY
+        return Position(board, 8 - color)
+
+    def search(self, depth):
+        if not depth: return self.evaluate()
+        maxx = -99
+        for i in self.get_all_moves():
+            score = -(self.make_move(i).search(depth-1))
+            maxx = max(maxx, score)
+        return maxx
+
+    def random_move(self):
+        return random.choice(self.get_all_moves())
+    
+    def good_move(self):
+        maxx, maxxmove = -999, ()
+        for i in self.get_all_moves():
+            w = -self.make_move(i).search(3)
+            if w > maxx:
+                maxx, maxxmove = w, i
+        print(w, toNotation(maxxmove))
+        return maxxmove
+
+def fromNotation(n, bs=8):
+    return (bs - 1 - (ord(n[1]) - ord('1')), ord(n[0]) - ord('a'), bs - 1 - (ord(n[3]) - ord('1')), ord(n[2]) - ord('a'))
+
+def toNotation(n, bs=8):
+    return chr(n[1] + ord('a')) + chr(bs - 1 - n[0] + ord('1')) + chr(n[3] + ord('a')) + chr(bs - 1 - n[2] + ord('1')) # 还没写完
 
 initial_position = Position([[BROOK, BKNIGHT, BBISHOP, BQUEEN, BKING, BBISHOP, BKNIGHT, BROOK],
                              [BPAWN, BPAWN, BPAWN, BPAWN, BPAWN, BPAWN, BPAWN, BPAWN],
                              [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
                              [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
                              [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-                             [EMPTY, EMPTY, EMPTY, EMPTY, WPAWN, EMPTY, EMPTY, EMPTY],
-                             [WPAWN, WPAWN, WPAWN, WPAWN, EMPTY, WPAWN, WPAWN, WPAWN],
-                             [WROOK, WKNIGHT, WBISHOP, WQUEEN, WKING, WBISHOP, WKNIGHT, WROOK]])
+                             [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
+                             [WPAWN, WPAWN, WPAWN, WPAWN, WPAWN, WPAWN, WPAWN, WPAWN],
+                             [WROOK, WKNIGHT, WBISHOP, WQUEEN, WKING, WBISHOP, WKNIGHT, WROOK]], WHITE)
 
-print(initial_position)
+position = initial_position
+
+while 1:
+    print(position)
+    position = position.make_move(position.good_move())
+    print(position)
+    print(list(map(toNotation, position.get_all_moves())))
+    position = position.make_move(fromNotation(input()))
+
+"""print(initial_position)
 
 print(initial_position.to_FEN())
 
 print(initial_position.get_all_moves())
 
 print(initial_position.evaluate())
+
+print(fromNotation("e4e5", 8))
+
+print(toNotation((4, 4, 3, 4), 8))
+
+print(list(map(toNotation, initial_position.get_all_moves())))
+
+e3b5 = initial_position.make_move(fromNotation("b7b5"))
+
+print(e3b5)
+
+print(list(map(toNotation, e3b5.get_all_moves())))"""
