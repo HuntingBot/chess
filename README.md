@@ -7,6 +7,7 @@ What needs to be fixed:
 * Did not implement en passant and promotion.
 * Did not implement the 50-move rule and repetition check.
 * Have problems in the endgame.
+* Errors out when the game ends. (...)
 
 ## Classes
 
