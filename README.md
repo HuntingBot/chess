@@ -1,6 +1,4 @@
-# chess
-
-An attempt at a chess variant engine (now only supports antichess)
+A very crude work in progress antichess engine.
 
 Generate moves brute forcely and brute forcely DFS until reaches depth limit, then evaluate. The evaluation function is `(opponent piece count - own piece count) + 0.01 * mobility` (mobility is possible number of moves)
 
